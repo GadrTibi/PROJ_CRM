@@ -66,11 +66,17 @@ def add_teleprospector():
     manager.add_teleprospector(teleprospector)
     return redirect(url_for('home'))
 
+@app.route('/leads')
+def view_all_leads():
+    leads = Lead.query.all()  # or however you get all leads
+    return render_template('leads.html', leads=leads)
+
+
 @app.route('/view_teleprospectors')
 def view_teleprospectors():
     return render_template('view_teleprospectors.html', manager=manager)
-
-@app.route('/teleprospectors/<int:teleprospecteur_id>/leads')
+    
+@app.route('/teleprospectors/<int:teleprospector_id>/leads')
 def view_leads(teleprospecteur_id):
     teleprospecteur = manager.get_teleprospecteur_by_id(teleprospecteur_id)
     leads = teleprospecteur.get_leads()

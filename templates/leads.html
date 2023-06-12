@@ -1,12 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>Leads</h2>
-  <div class="my-4">
+  <h2>All Leads</h2>
+  <ul>
     {% for lead in leads %}
-      <p class="lead">{{ lead.name }}</p>
+      <li>{{ lead.name }}</li>  <!-- adapt this to how your leads are structured -->
     {% endfor %}
-  </div>
-
-  <a href="{{ url_for('view_teleprospectors') }}" class="btn btn-secondary">Retour à la liste des téléprospecteurs</a>
+  </ul>
 {% endblock %}
