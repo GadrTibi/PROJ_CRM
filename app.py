@@ -4,86 +4,42 @@ import os
 import pandas as pd
 from flask_sqlalchemy import SQLAlchemy
 from database import db
-
+from models import Lead, Teleprospector, Manager
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///crm.db'
-db = SQLAlchemy(app)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db.init_app(app)
 
-
-class Lead:
-    def __init__(self, name, phone, status, assigned_to=None):
-        self.name = name
-        self.phone = phone
-        self.status = status
-        self.assigned_to = assigned_to
-
-class Teleprospector:
-    def __init__(self, id, name, leads=None):
-        self.id = id
-        self.name = name
-        self.leads = leads if leads is not None else []
-
-    def assign_lead(self, lead):
-        self.leads.append(lead)
-        lead.assigned_to = self
-
-    def get_leads(self):
-        return self.leads
-
-class Manager:
-    def __init__(self, name, teleprospectors=None, leads=None):
-        self.name = name
-        self.teleprospectors = teleprospectors if teleprospectors is not None else []
-        self.leads = leads if leads is not None else []
-
-    def assign_lead_to_teleprospector(self, lead, teleprospector):
-        teleprospector.assign_lead(lead)
-
-    def import_leads(self, leads):
-        for lead in leads:
-            self.leads.append(lead)
-
-    def add_lead(self, lead):
-        self.leads.append(lead)
-
-    def get_teleprospecteur_by_id(self, teleprospecteur_id):
-        for teleprospecteur in self.teleprospectors:
-            if teleprospecteur.id == teleprospecteur_id:
-                return teleprospecteur
-        return None
-
-    def add_teleprospector(self, teleprospector):
-        teleprospector.id = len(self.teleprospectors) + 1
-        self.teleprospectors.append(teleprospector)
-
-manager = Manager("Patron")
+@app.before_first_request
+def create_tables():
+    db.create_all()
 
 @app.route('/')
 def home():
-    return render_template('home.html', manager=manager)
+    return render_template('home.html', manager=Manager.query.first())
 
 @app.route('/add_teleprospector', methods=['POST'])
 def add_teleprospector():
     teleprospector_name = request.form.get('teleprospector_name')
-    teleprospector = Teleprospector(id=None, name=teleprospector_name)
-    manager.add_teleprospector(teleprospector)
+    teleprospector = Teleprospector(name=teleprospector_name)
+    db.session.add(teleprospector)
+    db.session.commit()
     return redirect(url_for('home'))
 
 @app.route('/leads')
 def view_all_leads():
-    leads = Lead.query.all()  # or however you get all leads
+    leads = Lead.query.all()
     return render_template('leads.html', leads=leads)
-
 
 @app.route('/view_teleprospectors')
 def view_teleprospectors():
-    return render_template('view_teleprospectors.html', manager=manager)
+    return render_template('view_teleprospectors.html', manager=Manager.query.first())
 
 @app.route('/teleprospectors/<int:teleprospector_id>/leads')
-def view_leads(teleprospecteur_id):
-    teleprospecteur = manager.get_teleprospecteur_by_id(teleprospecteur_id)
-    leads = teleprospecteur.get_leads()
+def view_leads(teleprospector_id):
+    teleprospector = Teleprospector.query.get(teleprospector_id)
+    leads = teleprospector.leads
     return render_template('view_leads.html', leads=leads)
 
 ALLOWED_EXTENSIONS = {'xlsx'}
@@ -104,7 +60,7 @@ def import_leads():
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             df = pd.read_excel(file)
-            
+
             # Création des objets Lead à partir du fichier Excel
             leads = []
             for _, row in df.iterrows():
@@ -112,14 +68,17 @@ def import_leads():
                     name=row['Nom'],
                     email=row['Email'],
                     phone=row['Téléphone'],
-                    status=row['Statut'],
+                    status=row['Status'],
                     # ... Ajoutez les autres colonnes du fichier Excel ici
                 )
                 leads.append(lead)
-            
+
             # Assignation des leads au manager
-            manager.assign_leads(leads)
-            
+            manager = Manager.query.first()
+            for lead in leads:
+                manager.leads.append(lead)
+            db.session.commit()
+
             flash('File uploaded and leads imported successfully')
             return redirect(url_for('home'))
 
@@ -127,11 +86,6 @@ def import_leads():
         return redirect(request.url)
 
     return render_template('import_leads.html')
-
-@app.before_request
-def create_tables():
-    db.create_all()
-
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,12 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>Liste des téléprospecteurs</h2>
-  <div class="teleprospectors">
-    {% for teleprospector in manager.teleprospectors %}
-      <div class="teleprospector">
-        <a href="{{ url_for('view_leads', teleprospector_id=teleprospector.id) }}" class="btn btn-teleprospector">{{ teleprospector.name }}</a>
-      </div>
-    {% endfor %}
-  </div>
+<h1>Teleprospectors</h1>
+
+<ul>
+  {% for teleprospector in manager.teleprospectors %}
+  <li>{{ teleprospector.name }}</li>
+  {% endfor %}
+</ul>
 {% endblock %}

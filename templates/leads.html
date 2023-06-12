@@ -1,10 +1,18 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>All Leads</h2>
-  <ul>
-    {% for lead in leads %}
-      <li>{{ lead.name }}</li>  <!-- adapt this to how your leads are structured -->
-    {% endfor %}
-  </ul>
+<h1>Leads</h1>
+
+<table>
+  <tr>
+    <th>Name</th>
+    <!-- Ajoutez d'autres colonnes si nécessaire -->
+  </tr>
+  {% for lead in leads %}
+  <tr>
+    <td>{{ lead.name }}</td>
+    <!-- Ajoutez d'autres colonnes si nécessaire -->
+  </tr>
+  {% endfor %}
+</table>
 {% endblock %}
