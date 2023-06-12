@@ -2,9 +2,13 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
 import os
 import pandas as pd
+from flask_sqlalchemy import SQLAlchemy
+from database import db
+
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///crm.db'
+db = SQLAlchemy(app)
 
 
 class Lead:
@@ -75,7 +79,7 @@ def view_all_leads():
 @app.route('/view_teleprospectors')
 def view_teleprospectors():
     return render_template('view_teleprospectors.html', manager=manager)
-    
+
 @app.route('/teleprospectors/<int:teleprospector_id>/leads')
 def view_leads(teleprospecteur_id):
     teleprospecteur = manager.get_teleprospecteur_by_id(teleprospecteur_id)
@@ -123,6 +127,11 @@ def import_leads():
         return redirect(request.url)
 
     return render_template('import_leads.html')
+
+@app.before_request
+def create_tables():
+    db.create_all()
+
 
 if __name__ == "__main__":
     app.run(debug=True)
