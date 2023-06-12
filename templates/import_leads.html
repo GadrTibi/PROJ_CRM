@@ -1,12 +1,11 @@
-<!DOCTYPE html>
-<html>
-<body>
-<h1>Import Leads</h1>
-<form action="{{ url_for('import_leads') }}" method="post" enctype="multipart/form-data">
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Import Leads</h2>
+  <form action="{{ url_for('import_leads') }}" method="post" enctype="multipart/form-data">
     <input type="file" name="file" accept=".xlsx">
     <input type="submit" value="Import">
-</form>
+  </form>
 
-<a href="{{ url_for('home') }}" class="btn">Retour à la page d'accueil</a>
-</body>
-</html>
+  <a href="{{ url_for('home') }}" class="btn">Retour à la page d'accueil</a>
+{% endblock %}
