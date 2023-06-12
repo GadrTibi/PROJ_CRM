@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 5px;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .btn:active {
+            background-color: #0056b3;
+            transform: translateY(1px);
+        }
+
+        .btn:focus {
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+<h1>Home</h1>
+<a href="{{ url_for('import_leads') }}" class="btn">Importer un fichier Excel de leads</a>
+
+<form action="{{ url_for('add_teleprospector') }}" method="post">
+    <input type="text" name="teleprospector_name" placeholder="Nom du téléprospecteur" required>
+    <input type="submit" value="Ajouter">
+</form>
+
+<a href="{{ url_for('view_teleprospectors') }}" class="btn">Liste des téléprospecteurs</a>
+</body>
+</html>
