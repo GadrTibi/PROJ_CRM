@@ -13,7 +13,5 @@ class Teleprospector(db.Model):
     name = db.Column(db.String(50), nullable=False)
     leads = db.relationship('Lead', backref='teleprospector', lazy=True)
 
-class Manager(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
+class Manager(Teleprospector):
     teleprospectors = db.relationship('Teleprospector', backref='manager', lazy=True)
