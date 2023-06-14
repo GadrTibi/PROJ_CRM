@@ -5,10 +5,12 @@ import pandas as pd
 from flask_sqlalchemy import SQLAlchemy
 from database import db
 from models import Lead, Teleprospector, Manager
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///crm.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = 'upload'
 db.init_app(app)
 
 with app.app_context():
@@ -43,6 +45,10 @@ def view_leads(teleprospector_id):
 
 ALLOWED_EXTENSIONS = {'xlsx'}
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @app.route('/import_leads', methods=['GET', 'POST'])
 def import_leads():
     if request.method == 'POST':
@@ -60,22 +66,34 @@ def import_leads():
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             df = pd.read_excel(file)
 
-            # Création des objets Lead à partir du fichier Excel
+            # Creation of Lead objects from the Excel file
             leads = []
             for _, row in df.iterrows():
                 lead = Lead(
-                    name=row['Nom'],
-                    email=row['Email'],
-                    phone=row['Téléphone'],
-                    status=row['Status'],
-                    # ... Ajoutez les autres colonnes du fichier Excel ici
+                    created=row['created'].to_pydatetime(),
+                    firstname=row['firstname'],
+                    lastname=row['lastname'],
+                    phone=row['phone'],
+                    own_state=row['own_state'],
+                    chauffage=row['chauffage'],
+                    zip=row['zip'],
+                    type_habitation=row['type_habitation'],
+                    email=row['email'],
+                    country=row['country']
                 )
                 leads.append(lead)
 
-            # Assignation des leads au manager
+            # Assignment of leads to the manager
             manager = Manager.query.first()
+
+            # Si aucun manager n'existe, en créer un par défaut
+            if manager is None:
+                manager = Manager(name="Default Manager")
+                db.session.add(manager)
+
             for lead in leads:
                 manager.leads.append(lead)
+            
             db.session.commit()
 
             flash('File uploaded and leads imported successfully')
